@@ -1,0 +1,360 @@
+---
+title: "Tehnična dokumentacija za tabele `tecaji` v bazi `produktivnost` na PostgreSQL strežniku na `umar-bi`"
+author: "mz"
+date: "`r format(Sys.time(), '%d.%B %Y')`"
+output:
+  bookdown::pdf_document2:
+    toc_depth: 4
+urlcolor: blue
+header-includes:
+- \renewcommand{\contentsname}{Vsebina}
+- \usepackage{booktabs}
+- \usepackage[table]{xcolor}
+- \usepackage{float}
+- \usepackage{longtable}
+---
+
+# Pregled
+
+Dokument vsebuje tehnično dokumentacijo glede podatkovnih tokov za zajem, obdelavo in zapis podatkov o tečajih v bazo `produktivnost` na PostgreSQL strežniku na `umar-bi`
+
+Gre za selitev podatkovnih tokov, ki so pred tem temeljili na Katarininih skriptah in se zapisovali v MS Access datoteke na M:.
+
+Projektna mapa se nahaja na `O:Avtomatizacija\umar_tecaji`
+
+# R skripte
+
+Vse skripte se nahajajo na `O:Avtomatizacija\umar_tecaji\R`
+
+## `ecb_daily.R` {#Sec:daily}
+
+*originalna verzija* - `arhiv\5_REER_ECB.R`
+
+*output:*
+
+  + [tecaji_dnevni](#Sec:tecajidnevni)
+
+
+*opis*:
+
+1. zajem dnevnih podatkov iz ECB-ja iz tabel `Exchange Rates - EXR` za nonEA partnerice
+2. zapis v tabelo `tečaji_dnevni`
+
+*spremembe* glede na originalno verzijo:
+
++ skripta za dnevne podatke je ločena od mesečnih/četrtletnih, zato da se lahko ločeno poganja
+
+*posodabljanje* - avtomatski zagon skripte v Task scheduler-ju na strežniku umar-bi vsak dan ob 16:00:30 (glej [tukaj](https://data.ecb.europa.eu/methodology/exchange-rates))
+
+## `ecb_monthly_quarterly.R` {#Sec:month}
+
+*originalna verzija* - `arhiv\5_REER_ECB.R`
+
+*output:*
+
++ [tečaji_mesečni](#Sec:tecajimesecni)
++ [tečaji_četrtletni](#Sec:tecajicetrt)
++ [preračuni](#Sec:preracuni)
++ [nonEA_tečaji_mesečni](#Sec:nonEA)
+
+*opis*:
+
+1. zajem mesečnih in četrtletnih podatkov iz ECB-ja iz tabel `Exchange Rates - EXR` za različne tečaje (za detajle glej)
+2. združitev tabel
+3. preračuni (yoy, drseče sredine, indeks s stalno osnovo, dolgoletno povprečje in izračun relativnih cen 
+4. zapis v omenjene štiri tabele
+
+*spremembe* glede na originalno verzijo. V originalni skripti so bile pripravljene 3 tabele:
+
++ skripta za mesečne/četrtletne podatke je ločena od dnevnih, zato da se lahko ločeno poganja
++ vrednosti za mesece so numerične (1, 2..) in ne besedion (01, 02..)
+
+*posodabljanje* - avtomatski zagon skripte v Task scheduler-ju na strežniku umar-bi ob 10:00:30 na datume objavljene na glej [tej povezavi](https://www.ecb.europa.eu/press/calendars/statscal/html/index.en.html).
+
+
+\newpage
+# Tabele v shemi `tečaji` na bazi `produktivnost` 
+
+## Tabela `tečaji_dnevni` {#Sec:tecajidnevni}
+
+*Skripta*: [ecb_daily.R](#Sec:daily) (poglavje \@ref(Sec:daily))
+
+*Prejšnja lokacija tabele*: `Efektivni_tecaji.accdb` tabela `tecaj_dnevni`
+
+\begin{table}[H]
+\centering
+\begin{tabular}{lp{10cm}}
+\toprule
+\textbf{Oznaka} & \textbf{Opis in možne vrednosti}  \\
+\toprule
+
+freq & \texttt{D} - dnevna \\
+
+currency & valuta. Izbor dvajstetih ne-EA valut: CHF, CNY, CZK, GBP, HUF, JPY, KRW, PLN, RUB, TRY, USD, DKK, RON, SEK, AUD, BGN, CAD, HKD, NOK, SGD \\
+
+currency denom &  denominirano v valuti: EUR \\
+
+exr\_type & tip tečaja: \texttt{SPOO} - Spot \\
+
+exr\_suffix & series variatio: \texttt{A} - average \\
+
+obstime & datum \\
+
+obsvalue & vrednost \\
+
+type & \texttt{EURO\_ER\_D}  \\
+\bottomrule
+\end{tabular}
+\caption{Spremenljivke v tabeli tečaji\_dnevni}
+\end{table}
+                                                                                                     
+
+## Tabela `tečaji_mesečni` {#Sec:tecajimesecni}
+
+*Skripta*: [ecb_monthly_quarterly.R](#Sec:month) (poglavje \@ref(Sec:month))
+
+*Prejšnja lokacija tabele*: `Efektivni_tecaji.accdb` tabela `mesecniRAW`
+
+
+\begin{table}[H]
+\centering
+\begin{tabular}{lp{10cm}}
+\toprule
+\textbf{Oznaka} & \textbf{Opis in možne vrednosti}  \\
+\toprule
+
+\texttt{freq} & \texttt{M} - mesečna \\
+
+\texttt{currency} & valuta. Izbor dvajstetih EA valut: ATS, BEF, CYP, DEM, EEK,
+                     ESP, FIM, FRF, GRD, HRK,
+                     IEP, ITL, LTL, LUF, LVL,
+                     MTL, NLG, PTE, SIT, SKK \\
+
+\texttt{currency denom} &  denominirano v valuti: EUR \\
+\texttt{obstime} & datum \\
+\texttt{obsvalue} & vrednost \\
+\texttt{type} & glej spodnjo tabelo  \\
+\texttt{year} & letnica \\
+\texttt{month} & mesec \\
+\texttt{yoy} & medletna sprememba \\
+\texttt{long\_avg\_TOT} & dolgoletno povprečje  - povprečje celotnega obdobja\\
+\texttt{long\_avg\_2004} & povprečje vrednosti od julija 2004 dalje \\
+\texttt{m3avg} & tro-mesečna drseča sredina - cetrirana \\
+\texttt{m3avg\_ver2} & tro-mesečna drseča sredina - desno poravnana \\
+\texttt{I2007} & povprečje vrednosti za leto 2007 \\
+\texttt{indeks\_LTA} & indeks z osnovo \texttt{long\_avg\_2004} = 100 \\
+\texttt{indeks\_2007} & indeks z osnovo \texttt{I2007} = 100 \\
+\bottomrule
+\end{tabular}
+\caption{Spremenljivke v tabeli tečaji\_mesečni}
+\end{table}
+                  
+\begin{table}[H]
+\centering
+\begin{tabular}{lp{6cm}p{6cm}}
+\toprule
+\textbf{Oznaka type} & Originalne ECB kode za \texttt{CL\_CURRENCY\_DENOM}  & Originalne ECB kode za \texttt{CL\_EXR\_TYPE}\\
+\toprule
+\texttt{NEER\_EA\_18\_M}\footnotemark  & \texttt{H02} Euro area countries and extended EER group of trading partners (fixed composition)& \texttt{NN00} Nominal harmonised competitiveness indicator (ECB terminology), Nominal effective exchange rate (EC terminology) \\
+  \texttt{NEER\_EA\_41\_M}\footnotemark  & \texttt{H03} Euro area countries and broad EER group of trading partners (fixed composition) & \texttt{NN00} Nominal harmonised competitiveness indicator (ECB terminology), Nominal effective exchange rate (EC terminology) \\
+\texttt{NEER\_ZEA\_41\_M}\footnotemark[2] & \texttt{E03} Broad EER group of trading partners (fixed composition) & \texttt{NN00} Nominal harmonised competitiveness indicator (ECB terminology), Nominal effective exchange rate (EC terminology) \\
+\texttt{NEER\_EA\_M} & \texttt{H00} Euro area countries (fixed composition) & \texttt{NN00} Nominal harmonised competitiveness indicator (ECB terminology), Nominal effective exchange rate (EC terminology) \\
+\texttt{NEER\_EURO\_18\_M} & \texttt{E02} Euro area countries (fixed composition) & \texttt{EN00} Nominal effective exch. rate) \\
+\texttt{NEER\_ZEA\_18\_M} & \texttt{E02} Euro area countries (fixed composition) &  \texttt{NN00} Nominal harmonised competitiveness indicator (ECB terminology), Nominal effective exchange rate (EC terminology) \\
+\bottomrule
+\end{tabular}
+\caption{Kode za tečaje v tabeli tečaji\_mesečni}
+\end{table}
+
+\footnotetext[1]{EER EA+18 : EA +  Australia, Canada, Denmark, Hong Kong, Japan, Korea, Norway, Singapore, Sweden, Switzerland, the United Kingdom, the United States, Bulgaria, China, Czech Republic, Hungary, Poland in Romania.}
+\footnotetext[2]{EER EA+41 : EA + 18 + Algeria, Argentina, Brazil, Chile, Colombia, Iceland, India, Indonesia, Israel, Malaysia, Mexico, Morocco, New Zealand, Peru, the Philippines, Russia, Saudi Arabia, South Africa, Taiwan, Thailand, Turkey, Ukraine in the United Arab Emirates.}
+
+
+## Tabela `tečaji_četrtletni` {#Sec:tecajicetrt}
+
+*Skripta*: [ecb_monthly_quarterly.R](#Sec:month) (poglavje \@ref(Sec:month))
+
+*Prejšnja lokacija tabele*: `Efektivni_tecaji.accdb` tabela `cetrtletniRAW`
+
+
+\begin{table}[H]
+\centering
+\begin{tabular}{lp{10cm}}
+\toprule
+\textbf{Oznaka} & \textbf{Opis in možne vrednosti}  \\
+\toprule
+
+\texttt{freq} & \texttt{Q} - četrtletna \\
+
+\texttt{currency} & valuta. Izbor dvajstetih EA valut: ATS, BEF, CYP, DEM, EEK,
+                     ESP, FIM, FRF, GRD, HRK,
+                     IEP, ITL, LTL, LUF, LVL,
+                     MTL, NLG, PTE, SIT, SKK \\
+
+\texttt{obstime} & datum \\
+\texttt{obsvalue} & vrednost \\
+\texttt{type} & glej spodnjo tabelo  \\
+\texttt{year} & letnica \\
+\texttt{q} & četrtletje \\
+\texttt{month} & mesec \\
+\texttt{yoy} & medletna sprememba \\
+\texttt{long\_avg\_TOT} & dolgoletno povprečje  - povprečje celotnega obdobja\\
+\texttt{long\_Q3\_2004} & povprečje vrednosti od Q3 2004 dalje \\
+\texttt{indeks\_LTA} & indeks z osnovo \texttt{long\_Q3\_2004} = 100 \\
+\texttt{Q4avg} & povprečje zadnjih štirih četrtletij \\
+\texttt{I2007} & povprečje vrednosti za leto 2007 \\
+\texttt{indeks\_2007} & indeks z osnovo \texttt{I2007} = 100 \\
+\bottomrule
+\end{tabular}
+\caption{Spremenljivke v tabeli tečaji\_četrtletni}
+\end{table}
+                  
+\begin{table}[H]
+\centering
+\begin{tabular}{lp{6cm}p{6cm}}
+\toprule
+\textbf{Oznaka type} & Originalne ECB kode za \texttt{CL\_CURRENCY\_DENOM}  & Originalne ECB kode za \texttt{CL\_EXR\_TYPE}\\
+\toprule
+\texttt{NEER\_EA\_18\_Q}\footnotemark[1] & \texttt{H02} Euro area countries and extended EER group of trading partners (fixed composition)& \texttt{NN00} Nominal harmonised competitiveness indicator (ECB terminology), Nominal effective exchange rate (EC terminology) \\
+ \texttt{NEER\_EA\_41\_Q}\footnotemark[2]  & \texttt{H03} Euro area countries and broad EER group of trading partners (fixed composition) & \texttt{NN00} Nominal harmonised competitiveness indicator (ECB terminology), Nominal effective exchange rate (EC terminology) \\
+\texttt{NEER\_EA\_Q} & \texttt{H00} Euro area countries (fixed composition) & \texttt{NN00} Nominal harmonised competitiveness indicator (ECB terminology), Nominal effective exchange rate (EC terminology) \\
+\texttt{NEER\_EURO\_18\_Q} & \texttt{E02} Euro area countries (fixed composition) & \texttt{EN00} Nominal effective exch. rate) \\
+\texttt{NEER\_ZEA\_18\_Q} & \texttt{E02} Euro area countries (fixed composition) &  \texttt{NN00} Nominal harmonised competitiveness indicator (ECB terminology), Nominal effective exchange rate (EC terminology) \\
+\midrule
+\texttt{REER\_EA\_18\_Q}\footnotemark[1] & \texttt{H02} Euro area countries and extended EER group of trading partners (fixed composition)& \texttt{NRC0} Real harmonised competitiveness indicator CPI deflated (ECB terminology), Real effective exchange rate (EC terminology)  \\
+\texttt{REER\_EA\_41\_Q}\footnotemark[2]  & \texttt{H03} Euro area countries and broad EER group of trading partners (fixed composition) &  \texttt{NRC0} Real harmonised competitiveness indicator CPI deflated (ECB terminology), Real effective exchange rate (EC terminology)  \\
+\texttt{REER\_EA\_Q} & \texttt{H00} Euro area countries (fixed composition) & \texttt{NRC0} Real harmonised competitiveness indicator CPI deflated (ECB terminology), Real effective exchange rate (EC terminology) \\
+\texttt{REER\_EURO\_18\_Q} & \texttt{E02} Euro area countries (fixed composition) & \texttt{ERCO} Real effective exch. rate CPI deflated) \\
+\texttt{REER\_ZEA\_18\_Q} & \texttt{E02} Euro area countries (fixed composition) &   \texttt{NRC0} Real harmonised competitiveness indicator CPI deflated (ECB terminology), Real effective exchange rate (EC terminology) \\
+
+\texttt{REER\_ULC\_Q} & \texttt{H02} Euro area countries and extended EER group of trading partners (fixed composition) &   \texttt{NRU1} Real harmonised competitiveness indicator ULC in total economy deflated \\
+\texttt{REER\_ULC\_EA\_Q} & \texttt{H00} Euro area countries (fixed composition) &   \texttt{NRU1} Real harmonised competitiveness indicator ULC in total economy deflated \\
+\texttt{REER\_ULC\_ZEA\_Q} & \texttt{E02} Euro area countries (fixed composition) &   \texttt{NRU1} Real harmonised competitiveness indicator ULC in total economy deflated \\
+\texttt{REER\_BDP\_Q} & \texttt{H02} Euro area countries and extended EER group of trading partners (fixed composition) &   \texttt{NRD0} Real harmonised competitiveness indicator GDP deflators deflated\\
+\texttt{REER\_PPI\_Q} & \texttt{H02} Euro area countries and extended EER group of trading partners (fixed composition) &   \texttt{NRP0} Real harmonised competitiveness indicator Producer Prices deflated
+\\
+\texttt{REER\_PPI\_EA\_Q} & \texttt{H00} Euro area countries (fixed composition) &   \texttt{NRP0} Real harmonised competitiveness indicator Producer Prices deflated
+\\
+\texttt{REER\_PPI\_ZEA\_Q} & \texttt{E02} Euro area countries (fixed composition) &   \texttt{NRP0} Real harmonised competitiveness indicator Producer Prices deflated
+\\
+\bottomrule
+\end{tabular}
+\caption{Kode za tečaje v tabeli tečaji\_četrtletni}
+\end{table}
+
+
+
+
+## Tabela `preračuni` {#Sec:preracuni}
+
+*Skripta*: [ecb_monthly_quarterly.R](#Sec:month) (poglavje \@ref(Sec:month))
+
+*Prejšnja lokacija tabele*: `Efektivni_tecaji.accdb` tabela `preracuniRAW`
+
+
+\begin{table}[H]
+\centering
+\begin{tabular}{lp{10cm}}
+\toprule
+\textbf{Oznaka} & \textbf{Opis in možne vrednosti}  \\
+\toprule
+
+\texttt{freq} & \texttt{M} - mesečna \\
+\texttt{freq} & \texttt{Q} - četrtletna \\
+\texttt{currency} & valuta. Izbor dvajstetih EA valut: ATS, BEF, CYP, DEM, EEK,
+                     ESP, FIM, FRF, GRD, HRK,
+                     IEP, ITL, LTL, LUF, LVL,
+                     MTL, NLG, PTE, SIT, SKK in EUR\\
+
+\texttt{obstime} & datum \\
+\texttt{obsvalue} & vrednost \\
+\texttt{year} & letnica \\
+\texttt{month} & mesec \\
+\midrule
+\texttt{relHICP\_EA\_18} & \texttt{REER\_EA\_18 / NEER\_EA\_18}\\
+\texttt{relHICP\_EA\_41} & \texttt{REER\_EA\_41 / NEER\_EA\_41}\\
+\texttt{relHICP\_EA} & \texttt{REER\_EA / NEER\_EA}\\
+\texttt{relHICP\_EURO} & \texttt{REER\_EURO\_18 / NEER\_EURO\_18}\\
+\texttt{relHICP\_ZEA\_18} & \texttt{REER\_EA\_18 / NEER\_ZEA\_18}\\
+\midrule
+\texttt{relULC} & \texttt{REER\_ULC\_Q / REER\_ULC\_Q}\\
+
+\bottomrule
+\end{tabular}
+\caption{Spremenljivke v tabeli tečaji\_preracuni}
+\end{table}
+
+
+
+## Tabela `nonEA_tečaji_mesečni` {#Sec:nonEA}
+
+*Skripta*: [ecb_monthly_quarterly.R](#Sec:month) (poglavje \@ref(Sec:month))
+
+*Prejšnja lokacija tabele*: `Efektivni_tecaji.accdb` tabela `tecajRAW`
+
+
+\begin{table}[H]
+\centering
+\begin{tabular}{lp{10cm}}
+\toprule
+\textbf{Oznaka} & \textbf{Opis in možne vrednosti}  \\
+\toprule
+
+\texttt{freq} & \texttt{M} - mesečna \\
+
+\texttt{currency} & valuta. Izbor dvajstetih EA valut: CHF, CNY, CZK, GBP, HUF,
+                        JPY, KRW, PLN, RUB, TRY,
+                        USD, DKK, RON, SEK, AUD,
+                        BGN, CAD, HKD, NOK, SGD \\
+
+\texttt{currency denom} &  denominirano v valuti: EUR \\
+\texttt{obstime} & datum \\
+\texttt{obsvalue} & vrednost \\
+\texttt{type} &  "EURO\_ER\_M" \\
+\texttt{year} & letnica \\
+\texttt{month} & mesec \\
+\texttt{yoy} & medletna sprememba \\
+\texttt{long\_avg\_TOT} & dolgoletno povprečje  - povprečje celotnega obdobja\\
+\texttt{long\_avg\_2004} & povprečje vrednosti od julija 2004 dalje \\
+\texttt{m3avg} & tro-mesečna drseča sredina - cetrirana \\
+\texttt{m3avg\_ver2} & tro-mesečna drseča sredina - desno poravnana \\
+\texttt{I2007} & povprečje vrednosti za leto 2007 \\
+\texttt{indeks\_LTA} & indeks z osnovo \texttt{long\_avg\_2004} = 100 \\
+\texttt{indeks\_2007} & indeks z osnovo \texttt{I2007} = 100 \\
+\bottomrule
+\end{tabular}
+\caption{Spremenljivke v tabeli nonEA\_tečaji\_mesečni}
+\end{table}
+
+
+# Administracija baze
+
+Glej dokumentacijo za `umar_produktivnost` za vse detajle glede dostopanja do tabel o tečajih - ker se nahajajo na isti bazi `produktivnost` v shemi `tecaji`. 
+
+## Vzpostavitev tabel
+`O:Avtomatizacija\umar_tecaji\SQL\setup_tečaji_tables.R` vsebuje skripto z SQL ukazi uporabljenimi za postavitev tabel na bazi. 
+
+## Posodoabljanje tabel
+
+### Daily 
+
+Skripta `O:Avtomatizacija\umar_tecaji\R\update_daily` požene dnevni zajem podatkov in deluje samo iz strežnika `umar-bi` (ker se poveže na localhost).
+
+Batch file je v `O:Avtomatizacija\umar-automation-scripts\batch-scripts\ecb_tečaji-daily_update.bat` in v sosednjo `log` mapo zapiše log. 
+
+Batch file se avtomatično požene s Task schedulerjem vsak dan nekaj sekund po 16:00. 
+
+Obveščanja z maili za dnevne posodobitve ni predvidenega zaenkrat.
+
+
+### Monthly & quarterly 
+
+Skripta `O:Avtomatizacija\umar_tecaji\R\update_monthly_quarterly.R` požene dnevni zajem podatkov in deluje samo iz strežnika `umar-bi` (ker se poveže na localhost).
+
+Batch file je v `O:Avtomatizacija\umar-automation-scripts\batch-scripts\ecb_tečaji-monthly_quarterly_update.bat` in v sosednjo `log` mapo zapiše log. 
+
+Batch file se avtomatično požene s Task schedulerjem malo po 10:00 zjutraj na dneve, ko so po [temle koledarju](https://www.ecb.europa.eu/press/calendars/statscal/html/index.en.html) napovedane nove objave EXR tabel. Napovedane so trenutno štiri naslednje objave, tako da si moraš naštimat opomnik, da je treba pogledati nove datume čez štiri mesece. 
+
+Vsaka posodobitev, ki spremeni število vrstic v tabelah, avtomatično pošlje maile uporabnikom. Nove uporabnike se dodaja v zgoraj omenjeni skripti. 
+
+

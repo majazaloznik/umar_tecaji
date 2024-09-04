@@ -1,0 +1,69 @@
+---
+output:
+  pdf_document: default
+urlcolor: blue
+---
+
+# 28.8.2024
+
+OK, gremo tečaje začet. Nov repozitorij, grem čez skripto, itak je samo ena za ECB.
+
+Najprej streamline, ker vedno downloada bulk in potem filtirira, dodam filtre že na get_data klicu. 
+
+Potem funkcija za združevanje, ki doda ime tabele kot tip. 
+
+Za dokumentacijo bi bilo fino zapisat kode od kod so prišle, se pravi kake so poizvedbe na ecb, ker so drugačna poimenovanja kot jih ima Katarina. Slednja pustim, samo v doku napišem kaj je na viru. 
+
+Hm, pred združevanjem enih tabel, zamenja currency in currency denom na enih tabelah, tega ne štekam.. 
+Aha, ok, mogoče štekam. Samo ne vem zakaj pri Q ne doda euro, samo pri M.. 
+
+Razdelila na tri skripte, daily, monthly in quarterly. In po moje bom tabelo preračuni tudi razdelina na mesečne in četrtletne, razen če rotija hoče drugače. Tako so potem skripte lahko naštimane na različne schedule. 
+
+Tukaj je schedule za release [https://www.ecb.europa.eu/press/calendars/statscal/html/index.en.html](klik), ki je napisan kot mesečni, oz. ne piše kdaj so četrtletni podatki objavljeni. 
+
+# 29.8.2024
+
+OK, ne bom mesečnih in četrtletnih razdeljevala, ker so trenutno naštimane že downstream excel tabele vezane na to, tako da jih nima smisla zaradi tega podirat, sploh ker ne vem kje vse so.. 
+
+Meseci so bili zdaj 01, 02, jest sem jih naredila na 1, 2, vprašanje, a je to OK? We'll see.
+
+OK, skripte so popeglane, gremo zdej na bazi postavit tabele. Najprej je treba novo shemo postavit, efektivni tecaji? samo tečaji. in čšžje bom uporabljala living on the edge pa to. 
+
+# 30.8.24
+
+OK, tabele so vse postavljene. v bistvu so vse iste kot prej, samo malo sem jih ipak preimenovala, ker noben ne razume kaj pomenijo ti RAW-ji na koncu. naslednji koraki:
+
+skripte za posodabljanje
+task scheduler
+dokumentacija
+
+monthly quarterly rabi 
+user  system elapsed 
+  77.38    1.34   87.06 
+daily pa:
+proc.time() - ptm
+   user  system elapsed 
+  29.48    0.41   31.31 
+  
+# 2.9.2024
+
+ok, dokumentacija je narejena, še skripte za posodabljanje. 
+
+OK, daily skripta, batch file in task scheduler je narejen. 
+
+Hm, v bistvu samo zbriše tabelo, ne napiše pa nove, lol. bom to jutri..
+
+Aja, ker je ime tabele s č-jem, sem dodala enc2utf8 v writetable in je delal.. 
+
+# 3.9.2024
+
+hm, zdej pa skripta za monthly ne dela preko batcha, in to zaradi get_produktivnost_table_row_counts funkcije, čeprav sem jo ukradla iz produktivnosti in tam dela OK, mislim vsaj. ful weird. pa ne vem zakaj mi je najprej javilo, da nima entry-ja v hba conf, čeprav ga za prooduktivnost tudi bi moral met.. Aha, to je blo mogoče zarad tega, ker sem imela cel IP izpisan, sem prestavila na localhost v con, promab resetirat in še enkrat.
+
+drek, ta č v imenu sheme je drek. ne vem za imena tabel, ta zgledajo OK, samo shema nikakor ne gre. mislim gre preko rstudia, ampak ne preko batcha in sem probala že vse, tako da drek. gremo novo shemo postavit. 
+
+ok, nova shema, zdej delajo maili. ampak spet ne delajo čšž-ji. kar mi sploh ni jasno, ker na produktivnosti valda delajo. sej tuki ni nič drgač, zakaj zdej nenadoma ne delajo. in encoding pri source-u ni relevanten, ne delajo preko batcha v nobenem primeru. samo direkt v  rstudiu. zdej sem same funkcije popravila, da uporabljajo \u017e ipd, in je zdej ok. samo je annoying ker ne štekam kako za vraga nekje dela ista koda ok, drugje pa ne. 
+
+OK, doumentacija je clean, dodam še Matevža za userja in mu dam cel projekt v review. 
+
+
+
