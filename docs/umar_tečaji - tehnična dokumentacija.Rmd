@@ -13,14 +13,18 @@ header-includes:
 - \usepackage{float}
 - \usepackage{longtable}
 ---
+Version        | Status   | Date        | Author    | Reviewer
+:-------------:|:--------:|:-----------:|:---------:|:--------:
+0.0.1          | draft    | 2024-08-29  | mz        |
+1.0.0          | release  | 2024-09-04  | mz        |   
 
 # Pregled
 
 Dokument vsebuje tehnično dokumentacijo glede podatkovnih tokov za zajem, obdelavo in zapis podatkov o tečajih v bazo `produktivnost` na PostgreSQL strežniku na `umar-bi`
 
-Gre za selitev podatkovnih tokov, ki so pred tem temeljili na Katarininih skriptah in se zapisovali v MS Access datoteke na M:.
+Gre za selitev podatkovnih tokov, ki so pred tem temeljili na Katarininih/Matevževih skriptah in se zapisovali v MS Access datoteke na M:.
 
-Projektna mapa se nahaja na `O:Avtomatizacija\umar_tecaji`
+Projektna mapa se nahaja na `O:Avtomatizacija\umar_tecaji`, kjer so vse skripte in dokumentacija.
 
 # R skripte
 
@@ -70,6 +74,22 @@ Vse skripte se nahajajo na `O:Avtomatizacija\umar_tecaji\R`
 + vrednosti za mesece so numerične (1, 2..) in ne besedion (01, 02..)
 
 *posodabljanje* - avtomatski zagon skripte v Task scheduler-ju na strežniku umar-bi ob 10:00:30 na datume objavljene na glej [tej povezavi](https://www.ecb.europa.eu/press/calendars/statscal/html/index.en.html).
+
+## `helper_functions.R`
+
+Skripta vsebuje pomožne funkcije, ki se source-ajo iz `ecb_daily.R` in `ecb_monthly_quarterly.R`. Dokumentirane so v skripti sami.
+
+## `update_daily.R`
+
+Skripta, ki jo dnevno požene batch file preko task scheduler-ja. Dnevna skripta ne naredi drugega kot požene `ecb_daily.R`.
+
+Celoten workflow je narejen, da se poganja neposredno iz `umar-bi` strežnika. 
+
+## `update_monthly_quarterly.R`
+
+Skripta, ki jo enkrat mesečno požene batch file preko task scheduler-ja. Mesečna skripta najprej preveri število vrstic v štirih mesečnih/četrtletnih tabelah na bazi, potem  požene `ecb_monthly_quarterly.R` in nato še enkrat preveri število vrstic v teh tabelah. Če je prišlo do spremembe števila vrstic, pošlje mail s to informacijo na izbrane naslove.
+
+Celoten workflow je narejen, da se poganja neposredno iz `umar-bi` strežnika. 
 
 
 \newpage
